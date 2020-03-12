@@ -37,7 +37,7 @@ defmodule Define.MixProject do
   defp deps do
     [
       {:extractor, in_umbrella: true},
-      {:phoenix, "~> 1.4.15"},
+      {:phoenix, "~> 1.4.11"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_html, "~> 2.13"},
@@ -45,7 +45,8 @@ defmodule Define.MixProject do
       {:phoenix_live_view, "~> 0.9.0"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:cowlib, "~> 2.8.0", override: true}
     ]
   end
 end
