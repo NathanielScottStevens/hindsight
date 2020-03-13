@@ -29,6 +29,11 @@ defmodule DefineWeb.EditDataDefinition do
         <%= text_input f, :extract_destination %>
         <%= error_tag f, :extract_destination %>
 
+        <ol>
+            <li><%= text_input f, :extract_steps, name: "data_definition[extract_steps][]" %></li>
+            <li><%= text_input f, :extract_steps, name: "data_definition[extract_steps][]" %></li>
+        </ol>
+
         <h2>Persistence</h2>
         <%= label f, :persist_source %>
         <%= text_input f, :persist_source %>
