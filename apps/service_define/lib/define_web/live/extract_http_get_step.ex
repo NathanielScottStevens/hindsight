@@ -16,6 +16,7 @@ defmodule DefineWeb.ExtractHttpGetStep do
       <%= select :input, :extract_steps, @steps, value: @module, phx_blur: "update_type", phx_target: "##{@id}" %>
       <%= text_input :input, :extract_steps, value: @params.url, phx_value_field: "url",  phx_blur: "update_param", phx_target: "##{@id}" %>
       <%= text_input :input, :extract_steps, value: @params.headers, phx_value_field: "headers",  phx_blur: "update_param", phx_target: "##{@id}" %>
+      <%= live_component @socket, DefineWeb.Child, id: "child",  parent: @id %>
     </div>
     """
   end
@@ -34,5 +35,19 @@ defmodule DefineWeb.ExtractHttpGetStep do
     send self(), {:update_extract_step, new_socket.assigns}
 
     {:noreply, new_socket}
+  end
+
+  def handle_event("update_type", %{"value" => value}, socket) do
+    new_socket = assign(socket, module: String.to_atom(value)) 
+    send self(), {:update_extract_step, new_socket.assigns}
+
+    {:noreply, new_socket}
+  end
+
+  def handle_event("on_child_click", %{"foo" => value}, socket) do
+    value |> IO.inspect(label: "lib/define_web/live/extract_http_get_step.ex:48") 
+    IO.inspect("Child Clicked")
+
+    {:noreply, socket}
   end
 end
