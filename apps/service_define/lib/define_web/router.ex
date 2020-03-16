@@ -18,6 +18,8 @@ defmodule DefineWeb.Router do
     pipe_through :browser
 
     live "/", EditDataDefinition
+
+    get("/healthcheck", HealthCheckController, :index)
   end
 
   # Other scopes may use custom stacks.

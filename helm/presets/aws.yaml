@@ -6,6 +6,9 @@ receive:
 broadcast:
   service:
     type: LoadBalancer
+define:
+  service:
+    type: LoadBalancer
 acquire:
   service:
     type: LoadBalancer
