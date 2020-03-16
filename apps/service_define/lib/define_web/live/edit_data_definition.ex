@@ -1,81 +1,101 @@
 defmodule DefineWeb.EditDataDefinition do
   use Phoenix.LiveView
   import Phoenix.HTML.Form
+  import Phoenix.HTML.Tag
   alias Define.DataDefinition
   import DefineWeb.ErrorHelpers
 
   def mount(_params, _session, socket) do
-    data_definition = %DataDefinition{extract_steps: ["1", "2"]}
-    changeset = DataDefinition.update(data_definition)
+    step = %{module: Extract.Http.Get, params: %{url: "", headers: ""}}
+    data_definition = DataDefinition.new!(%{extract_steps: [step]})
 
-    {:ok, assign(socket, data_definition: data_definition, changeset: changeset)}
+    {:ok, assign(socket, data_definition: data_definition, changes: data_definition)}
   end
 
   def render(assigns) do
     ~L"""
     <div>
+        <h1>Data Definition</h1>
+        <%= label :input, :label, "Dataset ID" %>
+          <%= text_input :input, :dataset_id, 
+            value: @changes.dataset_id, 
+            phx_value_field: "dataset_id", 
+            phx_blur: "update" 
+          %>
 
-      <h1>Data Definition</h1>
-      <%= f = form_for @changeset, "#", [phx_change: :validate, phx_submit: :save] %>
-        <%= label f, :dataset_id %>
-        <%= text_input f, :dataset_id %>
-        <%= error_tag f, :dataset_id %>
+        <%= label :input, :label, "Subset ID" %>
+          <%= text_input :input, :subset_id, 
+            value: @changes.subset_id, 
+            phx_value_field: "subset_id", 
+            phx_blur: "update" 
+          %>
 
-        <%= label f, :subset_id %>
-        <%= text_input f, :subset_id %>
-        <%= error_tag f, :subset_id %>
 
         <h2>Extraction</h2>
-        <%= label f, :extract_destination %>
-        <%= text_input f, :extract_destination %>
-        <%= error_tag f, :extract_destination %>
+        <%= label :input, :label, "Destination" %>
+        <%= text_input :input, :extract_destination, 
+          value: @changes.extract_destination, 
+          phx_value_field: "extract_destination", 
+          phx_blur: "update" 
+        %>
 
-        <h4>Steps</h4>
-        <%= for step <- input_value(f, :extract_steps) || [""] do %>
-          <%= text_input f, :extract_steps, value: step, name: "data_definition[extract_steps][]" %>
+        <%= label :input, :label, "Steps" %>
+        <%= for {step, index} <- Enum.with_index(@changes.extract_steps) do %>
+          <%= live_component @socket, DefineWeb.ExtractHttpGetStep, id: "extract_step-#{index}", index: index, steps: Map.keys(get_extract_steps()) %>
         <% end %>
-        <button phx-click="add_extract_step">Add Extract Step</button>
+        <button phx-click="add_extract_step">Add Step</button>
 
+      
         <h2>Persistence</h2>
-        <%= label f, :persist_source %>
-        <%= text_input f, :persist_source %>
-        <%= error_tag f, :persist_source %>
+        <%= label :input, :label, "Source" %>
+        <%= text_input :input, :persist_source, 
+          value: @changes.persist_source, 
+          phx_value_field: "persist_source", 
+          phx_blur: "update" 
+        %>
 
-        <%= label f, :persist_destination %>
-        <%= text_input f, :persist_destination %>
-        <%= error_tag f, :persist_destination %>
-
-        <%= submit "Save" %>
-      </form>
+        <%= label :input, :label, "Destination" %>
+        <%= text_input :input, :persist_destination, 
+          value: @changes.persist_destination, 
+          phx_value_field: "persist_destination",
+          phx_blur: "update" 
+        %>
     </div>
     """
   end
 
-  def handle_event("validate", %{"data_definition" => params}, socket) do
-    changeset =
-      socket.assigns.data_definition
-      |> DataDefinition.update(params)
-      |> Map.put(:action, :update)
-      |> IO.inspect(label: "lib/define_web/live/edit_data_definition.ex:56") 
-
-    {:noreply, assign(socket, changeset: changeset)}
-  end
-
-  def handle_event("save", %{"data_definition" => params}, socket) do
-    DataDefinition.update(socket.assigns.data_definition, params)
-
-    {:noreply, socket}
+  def handle_event("update", %{"field" => field, "value" => value}, socket) do
+    new_data_definition = Map.put(socket.assigns.changes, String.to_atom(field), value)
+    {:noreply, assign(socket, changes: new_data_definition)}
   end
 
   def handle_event("add_extract_step", _, socket) do
-    extract_steps = Map.get(socket.assigns.changeset.changes, :extract_steps, socket.assigns.data_definition.extract_steps)
+    step = %{module: Extract.Http.Get, params: %{url: "", headers: ""}}
 
-    changeset =
-      socket.assigns.data_definition
-      |> DataDefinition.update(%{extract_steps: extract_steps ++ [""]})
-      |> Map.put(:action, :update)
-      |> IO.inspect(label: "lib/define_web/live/edit_data_definition.ex:56") 
+    changes = 
+      socket.assigns.changes
+      |> Map.update(:extract_steps, [], &(&1 ++ [step]))
 
-    {:noreply, assign(socket, changeset: changeset)}
+    {:noreply, assign(socket, changes: changes)}
+  end
+
+  def handle_info({:update_extract_step, values}, socket) do
+    new_step = %{module: values.module, params: values.params}
+    changes = 
+      socket.assigns.changes
+      |> Map.update(:extract_steps, [], fn steps -> List.replace_at(steps, values.index, new_step) end)
+
+    changes |> IO.inspect(label: "lib/define_web/live/edit_data_definition.ex:103") 
+
+    {:noreply, assign(socket, changes: changes)}
+  end
+
+  defp get_extract_steps() do
+    %{
+      Extract.Decode.Csv => [headers: :list, skip_first_line: :boolean],
+      Extract.Decode.Json => [],
+      # Headers should be a map of strings
+      Extract.Http.Get => [url: :string, headers: :string]
+    }
   end
 end

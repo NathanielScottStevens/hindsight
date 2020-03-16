@@ -1,41 +1,35 @@
 defmodule Define.DataDefinition do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Definition, schema: Define.DataDefinition.V1
 
-  schema "data_definition" do
-    field(:dataset_id, :string)
-    field(:subset_id, :string, default: "default")
-    # {:map, inner_type}
-    field(:dictionary, :map)
-    field(:extract_destination, :string)
-    field(:extract_steps, {:array, :string})
-    field(:transform_steps, {:array, :string})
-    field(:persist_source, :string)
-    field(:persist_destination, :string)
-  end
+  @type t :: %__MODULE__{
+    version: integer,
+    dataset_id: String.t(),
+    subset_id: String.t(), 
+    dictionary: map,
+    extract_destination: String.t(),
+    extract_steps: list,
+    transform_steps: list,
+    persist_source: String.t(),
+    persist_destination: String.t()
+  }
 
-  @fields [
-    :dataset_id,
-    :subset_id,
-    :dictionary,
-    :extract_destination,
-    :extract_steps,
-    :transform_steps,
-    :persist_source,
-    :persist_destination
-  ]
+  @derive Jason.Encoder
+  defstruct version: 1,
+    dataset_id: nil,
+    subset_id: "default", 
+    dictionary: nil,
+    extract_destination: nil,
+    extract_steps: [],
+    transform_steps: [],
+    persist_source: nil,
+    persist_destination: nil
+end
 
-  def changeset(user, attrs) do
-    user
-    |> cast(attrs, @fields)
-  end
+defmodule Define.DataDefinition.V1 do
+  use Definition.Schema
 
-  def create(attrs \\ %{}) do
-    %__MODULE__{}
-    |> changeset(attrs)
-  end
-
-  def update(user, attrs \\ %{}) do
-    changeset(user, attrs)
+  @impl true
+  def s do
+    schema(%Define.DataDefinition{version: version(1)})
   end
 end
