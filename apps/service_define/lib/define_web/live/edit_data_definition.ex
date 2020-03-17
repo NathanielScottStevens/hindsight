@@ -41,7 +41,11 @@ defmodule DefineWeb.EditDataDefinition do
 
         <%= label :input, :label, "Steps" %>
         <%= for {step, index} <- Enum.with_index(@changes.extract_steps) do %>
-          <%= live_component @socket, DefineWeb.ExtractHttpGetStep, id: "extract_step-#{index}", index: index, steps: Map.keys(get_extract_steps()) %>
+          <%= live_component @socket, DefineWeb.ExtractStep, 
+            id: "extract_step-#{index}", 
+            index: index, 
+            steps: get_extract_steps() 
+          %>
         <% end %>
         <button phx-click="add_extract_step">Add Step</button>
 
@@ -72,7 +76,7 @@ defmodule DefineWeb.EditDataDefinition do
   def handle_event("add_extract_step", _, socket) do
     step = %{module: Extract.Http.Get, params: %{url: "", headers: ""}}
 
-    changes = 
+    changes =
       socket.assigns.changes
       |> Map.update(:extract_steps, [], &(&1 ++ [step]))
 
@@ -81,11 +85,14 @@ defmodule DefineWeb.EditDataDefinition do
 
   def handle_info({:update_extract_step, values}, socket) do
     new_step = %{module: values.module, params: values.params}
-    changes = 
-      socket.assigns.changes
-      |> Map.update(:extract_steps, [], fn steps -> List.replace_at(steps, values.index, new_step) end)
 
-    changes |> IO.inspect(label: "lib/define_web/live/edit_data_definition.ex:103") 
+    changes =
+      socket.assigns.changes
+      |> Map.update(:extract_steps, [], fn steps ->
+        List.replace_at(steps, values.index, new_step)
+      end)
+
+    changes |> IO.inspect(label: "lib/define_web/live/edit_data_definition.ex:103")
 
     {:noreply, assign(socket, changes: changes)}
   end
